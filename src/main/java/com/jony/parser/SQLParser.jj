@@ -1,0 +1,520 @@
+/**
+* options {
+      JavaCC的选项
+  }
+
+  PARSER_BEGIN(解析器类名)
+  package 包名;
+  import 库名;
+
+  public class 解析器类名 {
+      任意的Java代码
+  }
+  PARSER_END(解析器类名)
+
+  扫描器的描述
+
+  解析器的描述
+*/
+// 使得生成的函数不是static
+options
+{
+    STATIC = false;
+    UNICODE_PARSER = true;
+}
+// 定义生成一个类
+PARSER_BEGIN (SQLParser)
+package com.jony.parser;
+
+import java.util.*;
+
+public class SQLParser {
+
+    Sql initParser() {
+        try{
+            return init();
+        }catch (ParseException | TokenMgrError e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+}
+PARSER_END (SQLParser)
+// 会被词法分析器忽略的部分
+SKIP: { "\n" | "\r" | "\r\n" |"\\"|"\t"|" "}
+// 定义token关键字
+TOKEN [IGNORE_CASE]:
+{
+ <CREATE    : ("Create Table")>
+|<DROP      : ("Drop Table")>
+|<SELECT    : ("Select")>
+|<INSERT    : ("Insert Into")>
+|<UPDATE    : ("Update")>
+|<SET       : ("Set")>
+|<DELETE    : ("Delete From")>
+|<DISTINCT  : ("Distinct")>
+|<VALUES    : ("Values")>
+|<FROM      : ("From")>
+|<WHERE     : ("Where")>
+|<ORDERBY   : ("Order By")>
+|<NULL      : ("Null")>
+|<OR        : ("OR")>
+|<LIKE      : ("LIKE")>
+|<AND       : ("AND")>
+|<NOT       : ("NOT")>
+|<DATATYPE  : ("INT")|("STR")>
+|<DIGIT     : (["0"-"9"]) >
+|<INTEGER   : (["0"-"9"])+ >
+|<LETTER    : (["a"-"z"]) >
+|<NUMERAL   : (<LETTER>)(["a"-"z","0"-"9"])+ >
+|<LPAREN    : ("(") >
+|<RPAREN    : (")") >
+|<LBRACE    : ("{") >
+|<RBRACE    : ("}") >
+|<LBRACKET  : ("[") >
+|<RBRACKET  : ("]") >
+|<COMMA     : (",") >
+|<DOT       : (".") >
+//|<SPACE: " " >
+|<PLUS      : ("+") >
+|<MINUS     : ("-") >
+|<STAR      : ("*") >
+|<SLASH     : ("/") >
+|<LT        : ("<") >
+|<GT        : (">") >
+|<EQ        : ("=") >
+|<COMP_OP   : (<LT>|<GT>|<EQ>)>
+|<QUOTE     : ("\""|"\'")>
+}
+
+//SPECIAL_TOKEN : {<COMMENT:("#")+(<DIGIT>|<LETTER>|" ")*("#")+>}
+
+/*表名语法，单个字母或者字母开头带数字的串*/
+Token TableName(): {
+    Token T;
+}
+{
+    T = <LETTER>
+    {return T;} |
+    T = <NUMERAL>
+    {return T;}
+}
+
+/*属性名语法，同表名语法*/
+Token AttributeName(): {
+    Token T;
+}
+{
+    T = <LETTER>
+    {return T;} |
+    T = <NUMERAL>
+    {return T;}
+}
+
+/*列名，表名.属性名*/
+Token ColumnName(): {
+    Token T;
+    Token S = null;
+}
+{
+    T = TableName()[<DOT> S = AttributeName()]
+    {
+        if (S!= null) {T.image = T.image + "." + S.image;}
+        return T;
+    }
+}
+
+/*字符串常量*/
+String Literal():
+{
+    Token T;
+    StringBuilder sb = new StringBuilder();
+}
+{
+    <QUOTE>
+    (
+     T = <NUMERAL> {sb.append(T.image);}
+    |T = <DIGIT> {sb.append(T.image);}
+    |T = <LETTER> {sb.append(T.image);}
+    |T = <LPAREN> {sb.append(T.image);}
+    |T = <RPAREN> {sb.append(T.image);}
+    |T = <COMMA> {sb.append(T.image);}
+    |T = <DOT> {sb.append(T.image);}
+    |T = <INTEGER> {sb.append(T.image);}
+    )*
+    <QUOTE>
+    {return sb.toString();}
+}
+
+
+// 语法分析
+Sql init():
+{
+    Sql sql = null;
+}
+{
+    (
+          sql = CreateSql()
+        | sql = DropSql()
+        | sql = SelectSql()
+        | sql = InsertSql()
+        | sql = DeleteSql()
+        | sql = UpdateSql()
+
+    )*
+    <EOF>
+    {return sql;}
+}
+
+// 创建表
+Sql CreateSql():
+{
+    Token T;
+    Sql sql;
+    LinkedHashMap<String, String> attributes;
+}
+{
+    <CREATE>
+    T = TableName()
+    <LPAREN>
+    attributes = AttrTypeList()
+    <RPAREN>
+    {
+        sql = new CreateSql(T.image, attributes);
+        return sql;
+    }
+}
+
+LinkedHashMap AttrTypeList():
+{
+   Token AName;
+   Token AType;
+   LinkedHashMap<String, String> var = new LinkedHashMap<String, String>();
+}
+{
+    AName = AttributeName()
+    AType = <DATATYPE>
+    {   var.put(AName.image,AType.image);    }
+    (
+        [<COMMA>]
+        AName = AttributeName()
+        AType = <DATATYPE>
+        {
+            var.put(AName.image,AType.image);
+        }
+    )*
+    {
+        return var;
+    }
+}
+// 删除表
+Sql DropSql():
+{
+    Token T;
+}
+{
+    <DROP>
+    T = TableName()
+    {
+        return new DropSql(T.image);
+    }
+}
+// 删除sql
+Sql DeleteSql():
+{
+    Token T;
+    List<List<Expression>> clause = null;
+}
+{
+    <DELETE>
+    T = TableName()
+    [<WHERE> clause = Condition()]
+    {
+        return new DeleteSql(T.image, clause);
+    }
+}
+// 插入sql
+Sql InsertSql():
+{
+    Token T;
+    ArrayList<String> attr = null;
+    List<List<String>> values;
+    Sql sql;
+}
+{
+    <INSERT>
+    T = TableName()
+    [<LPAREN>
+    attr = AttrList()
+    <RPAREN>]
+    ( values = tuples()
+        {   return new InsertSql(T.image, attr, values);    }
+    | sql = SelectSql()
+        {   return new InsertSql(T.image, attr, (SelectSql)sql);    }
+    )
+}
+
+ArrayList<String> AttrList():
+{
+    Token T;
+    ArrayList<String> attr = new ArrayList<String>();
+}
+{
+    T = AttributeName()
+        {attr.add(T.image);}
+    ( <COMMA>
+        T = AttributeName()
+        {attr.add(T.image);}
+    )*
+    {return attr;}
+}
+
+List<List<String>> tuples():
+{
+    Token T;
+    List<String> tup;
+    List<List<String>> values = new ArrayList<List<String>>();
+}
+{
+    <VALUES> <LPAREN> tup = Values() <RPAREN>
+    {values.add(tup);}
+    (
+        <COMMA>
+        <LPAREN> tup = Values() <RPAREN>
+        {values.add(tup);}
+    )*
+    {return values;}
+}
+
+String Value():
+{   Token T;
+    String S;
+}
+{
+    T = <NULL>
+        {return T.image;}
+    | S = Literal()
+        {return S;}
+    | T = <INTEGER>
+        {return T.image;}
+    | T = <DIGIT>
+        {return T.image;}
+}
+
+List<String> Values():
+{
+    String T;
+    List<String> vals = new ArrayList<String>();
+}
+{
+    T = Value()
+        {vals.add(T);}
+    ( <COMMA>
+        T = Value()
+        {vals.add(T);}
+    )*
+    {return vals;}
+}
+// 查询sql
+Sql SelectSql():
+{
+    Token D = null;
+    Sql sql;
+    ArrayList<String> selList;
+    ArrayList<String> tabList;
+    List<List<Expression>> clause = null;
+    Token O = null;
+}
+{
+    <SELECT>
+    [D = <DISTINCT>]
+    selList = selectList()
+    <FROM>
+    tabList = tableList()
+    [<WHERE> clause = Condition()]
+    [<ORDERBY> O = ColumnName()]
+    {
+        sql = new SelectSql(D, selList, tabList, clause, (O==null? "": O.image));
+        return sql;
+    }
+}
+
+
+
+ArrayList<String> selectList():
+{
+    ArrayList<String> subList;
+}
+{
+    <STAR>
+    {
+        return new ArrayList<String>(){
+            {
+                add("*");
+            }
+        };
+    }
+    | subList = selectSubList()
+    {
+        return subList;
+    }
+}
+
+ArrayList<String> selectSubList():
+{
+    Token T;
+    ArrayList<String> subList = new ArrayList<String>();
+}
+{
+    T = ColumnName()
+    {subList.add(T.image);}
+    (
+        <COMMA>
+        T = ColumnName()
+        {subList.add(T.image);}
+    )*
+    {return subList;}
+}
+
+ArrayList<String> tableList():
+{
+    Token T;
+    ArrayList<String> tabList = new ArrayList<String>();
+}
+{
+    T = TableName()
+    {tabList.add(T.image);}
+    (
+        <COMMA>
+        T = TableName()
+        {tabList.add(T.image);}
+    )*
+    {return tabList;}
+}
+
+String term():
+{   Token T;
+    String S;
+}
+{
+    T = <INTEGER>
+    {
+        return T.image;
+    }
+    | T = <DIGIT>
+    {
+        return T.image;
+    }
+}
+
+ArrayList<String> exp() :
+{
+  Token T;
+  String S;
+  ArrayList<String> expList = new ArrayList<String>();
+}
+{
+    [T = <LPAREN>    { expList.add(T.image);} ]
+    S = term()           { expList.add(S);}
+    (    T = <PLUS>      { expList.add(T.image);}
+         S = term()      { expList.add(S);}
+         [T = <RPAREN>    { expList.add(T.image);} ]
+        |T = <MINUS>     { expList.add(T.image);}
+         S = term()      { expList.add(S);}
+         [T = <RPAREN>    { expList.add(T.image);} ]
+        |T = <STAR>      { expList.add(T.image);}
+         S = term()      { expList.add(S);}
+         [T = <RPAREN>    { expList.add(T.image);} ]
+        |T = <SLASH>     { expList.add(T.image);}
+         S = term()      { expList.add(S);}
+         [T = <RPAREN>    { expList.add(T.image);} ]
+    )*
+    { return expList; }
+}
+
+Expression boolFactor() :
+{
+    Token T;
+    String columnName;
+    ArrayList<String> expr = new ArrayList<String>();
+    String S;
+    Expression res = new Expression();
+}
+{
+    T = ColumnName()
+    { columnName = T.image; }
+    <EQ>
+    (expr = exp() | S = Literal() {expr.add(S);})
+    {
+        res.setColumnName(columnName);
+        res.setExpr(expr);
+        return res;
+    }
+}
+
+List<Expression> boolTerm() :
+{
+    Expression S;
+    List<Expression> cond = new ArrayList<Expression>();
+    List<Expression> res = new ArrayList<Expression>();
+}
+{
+    S = boolFactor()   { res.add(S); }
+    [
+        <AND>
+        cond = boolTerm()   { res.addAll(cond); }
+    ]
+    { return res;}
+}
+
+List<List<Expression>> Condition() :
+{
+    List<Expression> S;
+    List<List<Expression>> cond = new ArrayList<List<Expression>>();
+    List<List<Expression>> res = new ArrayList<List<Expression>>();
+}
+{
+    S = boolTerm()   { res.add(S); }
+    [
+        <OR>
+        cond = Condition()   { res.addAll(cond); }
+    ]
+    { return res;}
+}
+// 更新sql
+Sql UpdateSql() :
+{
+    Token T;
+    LinkedHashMap<String, String> mp;
+    List<List<Expression>> condition = null;
+}
+{
+    <UPDATE>
+    T = TableName()
+    <SET>
+    mp = AttrValueMap()
+    [<WHERE> condition = Condition()]
+    {return new UpdateSql(T.image, mp, condition);}
+}
+
+LinkedHashMap<String, String> AttrValueMap() :
+{
+    Token AttrName;
+    String value;
+    LinkedHashMap<String, String> mp = new LinkedHashMap();
+}
+{
+    AttrName = AttributeName()
+    <EQ>
+    value = Value()
+    {mp.put(AttrName.image, value);}
+    (
+    <COMMA>
+    AttrName = AttributeName()
+    <EQ>
+    value = Value()
+    {mp.put(AttrName.image, value);}
+    )*
+    {return mp;}
+}
