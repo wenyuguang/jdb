@@ -38,7 +38,7 @@ public class SQLParser implements SQLParserConstants {
     throw new Error("Missing return statement in function");
 }
 
-/*属�?�名语法，同表名语法*/
+/*属性语法，同表名语法*/
   final public Token AttributeName() throws ParseException {Token T;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case LETTER:{
@@ -59,7 +59,6 @@ public class SQLParser implements SQLParserConstants {
     throw new Error("Missing return statement in function");
 }
 
-/*列名，表�?.属�?�名*/
   final public Token ColumnName() throws ParseException {Token T;
     Token S = null;
     T = TableName();
@@ -78,7 +77,7 @@ if (S!= null) {T.image = T.image + "." + S.image;}
     throw new Error("Missing return statement in function");
 }
 
-/*字符串常�?*/
+
   final public String Literal() throws ParseException {Token T;
     StringBuilder sb = new StringBuilder();
     jj_consume_token(QUOTE);
@@ -206,7 +205,7 @@ sb.append(T.image);
     throw new Error("Missing return statement in function");
 }
 
-// 创建�?
+
   final public Sql CreateSql() throws ParseException {Token T;
     Sql sql;
     LinkedHashMap<String, String> attributes;
@@ -256,7 +255,7 @@ var.put(AName.image,AType.image);
     throw new Error("Missing return statement in function");
 }
 
-// 删除�?
+
   final public Sql DropSql() throws ParseException {Token T;
     jj_consume_token(DROP);
     T = TableName();
