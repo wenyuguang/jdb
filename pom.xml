@@ -13,30 +13,196 @@
 		<java.version>1.8</java.version>
 	</properties>
 	<dependencies>
-		
+		<dependency>
+			<groupId>org.checkerframework</groupId>
+			<artifactId>checker-qual</artifactId>
+			<version>3.15.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>30.1.1-jre</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.esri.geometry/esri-geometry-api -->
+		<dependency>
+			<groupId>com.esri.geometry</groupId>
+			<artifactId>esri-geometry-api</artifactId>
+			<version>2.2.4</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apiguardian/apiguardian-api -->
+		<dependency>
+			<groupId>org.apiguardian</groupId>
+			<artifactId>apiguardian-api</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.calcite.avatica/avatica-core -->
+		<dependency>
+			<groupId>org.apache.calcite.avatica</groupId>
+			<artifactId>avatica-core</artifactId>
+			<version>1.18.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.31</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.codehaus.janino/commons-compiler -->
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>commons-compiler</artifactId>
+			<version>3.1.4</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<version>2.12.3</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.codehaus.janino/janino -->
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+			<version>3.0.11</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.yahoo.datasketches/sketches-core -->
+		<dependency>
+			<groupId>com.yahoo.datasketches</groupId>
+			<artifactId>sketches-core</artifactId>
+			<version>0.9.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path -->
+		<dependency>
+			<groupId>com.jayway.jsonpath</groupId>
+			<artifactId>json-path</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-dbcp2 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.8.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.10.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/net.hydromatic/aggdesigner-algorithm -->
+		<dependency>
+			<groupId>net.hydromatic</groupId>
+			<artifactId>aggdesigner-algorithm</artifactId>
+			<version>6.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.15</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.google.uzaygezen/uzaygezen-core -->
+		<dependency>
+			<groupId>com.google.uzaygezen</groupId>
+			<artifactId>uzaygezen-core</artifactId>
+			<version>0.2</version>
+		</dependency>
 
 	</dependencies>
 
 	<build>
 		<plugins>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
 				<configuration>
-					<source>8</source>
-					<target>8</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-        </plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>javacc-maven-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>javacc</id>
+						<goals>
+							<goal>javacc</goal>
+						</goals>
+						<configuration>
+							<sourceDirectory>${project.build.directory}/generated-sources/fmpp</sourceDirectory>
+							<includes>
+								<include>**/Parser.jj</include>
+							</includes>
+							<lookAhead>2</lookAhead>
+							<isStatic>false</isStatic>
+						</configuration>
+					</execution>
+					<execution>
+						<id>javacc-test</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>javacc</goal>
+						</goals>
+						<configuration>
+							<sourceDirectory>${project.build.directory}/generated-test-sources/fmpp</sourceDirectory>
+							<outputDirectory>${project.build.directory}/generated-test-sources/javacc</outputDirectory>
+							<includes>
+								<include>**/Parser.jj</include>
+							</includes>
+							<lookAhead>2</lookAhead>
+							<isStatic>false</isStatic>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.drill.tools</groupId>
+				<artifactId>drill-fmpp-maven-plugin</artifactId>
+				<version>1.19.0</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.freemarker</groupId>
+						<artifactId>freemarker</artifactId>
+						<version>2.3.31</version>
+					</dependency>
+					<dependency>
+						<groupId>net.sourceforge.fmpp</groupId>
+						<artifactId>fmpp</artifactId>
+						<version>0.9.16</version>
+						<exclusions>
+							<exclusion>
+								<groupId>org.freemarker</groupId>
+								<artifactId>freemarker</artifactId>
+							</exclusion>
+						</exclusions>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<configuration>
+							<config>src/main/codegen/config.fmpp</config>
+							<output>${project.build.directory}/generated-sources/fmpp</output>
+							<templates>src/main/codegen/templates</templates>
+						</configuration>
+						<id>generate-fmpp-sources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 </project>
