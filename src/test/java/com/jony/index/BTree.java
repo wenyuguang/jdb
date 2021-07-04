@@ -60,11 +60,11 @@ public class BTree<Key extends Comparable<Key>, Value>  {
         /**
          * the array of children
          */
-        private Entry[] children = new Entry[M];
+        final private Entry[] children = new Entry[M];
 
         /**
          * create a node with k children
-         * @param childrenNum
+         * @param childrenNum count
          */
         private Node(int childrenNum) {
             this.childrenNum = childrenNum;
@@ -76,6 +76,7 @@ public class BTree<Key extends Comparable<Key>, Value>  {
      * external nodes: only use key and value
      */
     private static class Entry {
+
         private Comparable key;
         private Object val;
         /**
@@ -323,8 +324,12 @@ public class BTree<Key extends Comparable<Key>, Value>  {
         st.put("www.espn.com",         "199.181.135.201");
         st.put("www.weather.com",      "63.111.66.11");
         st.put("www.yahoo.com",        "216.109.118.65");
+        st.put("123", "123");
+        st.put("123", "4534");
+        st.put("123", "adfgfg");
 
 
+        System.out.println("123:  " + st.get("123"));
         System.out.println(" cs.princeton.edu:  " + st.get("www.cs.princeton.edu"));
         System.out.println("hardvardsucks.com: " + st.get("www.harvardsucks.com"));
         System.out.println("simpsons.com:      " + st.get("www.simpsons.com"));
