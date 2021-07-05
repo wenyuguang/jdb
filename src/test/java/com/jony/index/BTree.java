@@ -48,6 +48,10 @@ public class BTree<Key extends Comparable<Key>, Value>  {
      * number of key-value pairs in the B-tree
      */
     private int size;
+    /**
+     * key是否重复
+     */
+    boolean isRepeatKey = false;
 
     /**
      * helper B-tree node data type
@@ -63,7 +67,7 @@ public class BTree<Key extends Comparable<Key>, Value>  {
         final private Entry[] children = new Entry[M];
 
         /**
-         * create a node with k children
+         * create a node with childrenNum children
          * @param childrenNum count
          */
         private Node(int childrenNum) {
@@ -176,7 +180,9 @@ public class BTree<Key extends Comparable<Key>, Value>  {
             throw new IllegalArgumentException("argument key to put() is null");
         }
         Node splitedNode = insert(root, key, val, height);
-        size ++;
+        if (!isRepeatKey){
+            size ++;
+        }
         if (splitedNode == null){
             return;
         }
@@ -202,25 +208,31 @@ public class BTree<Key extends Comparable<Key>, Value>  {
         Entry entry = new Entry(key, val, null);
 
         // key去重
+        isRepeatKey = false;
         for (int i = 0; i < node.childrenNum; i++) {
             if (equal(node.children[i].key, key)) {
+                isRepeatKey = true;
+
                 entry.next = node.children[i].next;
                 node.children[i] = entry;
                 return null;
             }
         }
+
         // external node
         if (height == 0) {
-            for (j = 0; j < node.childrenNum; j++) {
-                if (less(key, node.children[j].key))
+            for (j = 0; j < node.childrenNum; j ++) {
+                if (less(key, node.children[j].key)){
                     break;
+                }
             }
         }
 
         // internal node
         else {
-            for (j = 0; j < node.childrenNum; j++) {
+            for (j = 0; j < node.childrenNum; j ++) {
                 if ((j + 1 == node.childrenNum) || less(key, node.children[j + 1].key)) {
+                    // 递归查找，树的高度减1
                     Node splitedNode = insert(node.children[j ++].next, key, val, height - 1);
                     if (splitedNode == null) {
                         return null;
@@ -233,11 +245,11 @@ public class BTree<Key extends Comparable<Key>, Value>  {
             }
         }
 
-        for (int i = node.childrenNum; i > j; i--){
+        for (int i = node.childrenNum; i > j; i --){
             node.children[i] = node.children[i - 1];
         }
         node.children[j] = entry;
-        node.childrenNum++;
+        node.childrenNum ++;
         if (node.childrenNum < M){
             return null;
         }else {
@@ -306,6 +318,11 @@ public class BTree<Key extends Comparable<Key>, Value>  {
     public static void main(String[] args) {
 
         BTree<String, String> st = new BTree<String, String>();
+        st.put("1", "1");
+        st.put("2", "2");
+        st.put("3", "3");
+        st.put("4", "4");
+        st.put("5", "5");
         st.put("www.cs.princeton.edu", "128.112.136.12");
         st.put("www.cs.princeton.edu", "128.112.136.11");
         st.put("www.princeton.edu",    "128.112.128.15");
