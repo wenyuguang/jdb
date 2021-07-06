@@ -11,7 +11,7 @@ public class Node {
 
     public Entry[] currentEntry = new Entry[3];
 
-    public Node[] childrens = new Node[3];
+    public Node[] childrens = new Node[4];
 
     @Override
     public String toString() {

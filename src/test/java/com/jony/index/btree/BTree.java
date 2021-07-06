@@ -25,6 +25,39 @@ public class BTree {
             return;
         }
         root = node;
+        // 分裂
+        if (node.currentEntrySize == 3){
+            Node tmpNode = new Node();
+            Node leftNode = new Node();
+            Node rightNode = new Node();
+
+            leftNode.currentEntrySize ++;
+            rightNode.currentEntrySize ++;
+            // 现在是3阶，先写死
+            leftNode.currentEntry[0] = node.currentEntry[0];
+            leftNode.childrens[0] = node.childrens[0];
+            leftNode.childrens[1] = node.childrens[1];
+
+            rightNode.currentEntry[0] = node.currentEntry[2];
+            rightNode.childrens[0] = node.childrens[2];
+            rightNode.childrens[1] = node.childrens[3];
+
+            // 设置父节点自己点数
+            tmpNode.childrenNodeSize = 2;
+            // 把要上移的数据赋值给父结点
+            tmpNode.currentEntry[0] = node.currentEntry[order / 2];
+            tmpNode.childrenNodeSize = 2;
+            tmpNode.currentEntrySize ++;
+
+            tmpNode.childrens[0] = leftNode;
+            tmpNode.childrens[1] = rightNode;
+
+            leftNode.childrenNodeSize = 2;
+            rightNode.childrenNodeSize = 2;
+
+            root = tmpNode;
+        }
+
     }
 
     public static void main(String[] args) {
@@ -40,7 +73,11 @@ public class BTree {
         bTree.put(9, "9");
         bTree.put(10, "10");
         bTree.put(11, "11");
-
+        bTree.put(12, "12");
+        bTree.put(13, "13");
+        bTree.put(14, "14");
+        bTree.put(15, "15");
+        bTree.put(16, "15");
     }
 
     private Node putVal(Node node, int key, Object val, int treeHeight) {
@@ -97,8 +134,7 @@ public class BTree {
 
                     tmpNode.childrens[0] = leftNode;
                     tmpNode.childrens[1] = rightNode;
-                    // 拆分赋值
-//                    node.currentEntry[2] = node.currentEntry[0];
+
                     return tmpNode;
                 }
                 return null;
@@ -141,21 +177,45 @@ public class BTree {
             // 合并父节点
             node.currentEntry[node.currentEntrySize] = tmp.currentEntry[tmp.currentEntrySize - 1];
             node.currentEntrySize ++;
-            
+
             // 串联子节点
             node.childrens[node.childrenNodeSize - 1] = tmp.childrens[0];
-            try {
+            node.childrens[node.childrenNodeSize] = tmp.childrens[1];
 
-                node.childrens[node.childrenNodeSize] = tmp.childrens[1];
-            }catch (Exception e){
-                e.printStackTrace();
-                System.out.println(newEntry.toString());
-            }
             node.childrenNodeSize ++;
-//            node.childrens[i] = tmp;
 
+            if (node.currentEntrySize == 3){
+                Node tmpNode = new Node();
+                Node leftNode = new Node();
+                Node rightNode = new Node();
 
-            return node;
+                leftNode.currentEntrySize ++;
+                rightNode.currentEntrySize ++;
+                // 现在是3阶，先写死
+                leftNode.currentEntry[0] = node.currentEntry[0];
+                leftNode.childrens[0] = node.childrens[0];
+                leftNode.childrens[1] = node.childrens[1];
+
+                rightNode.currentEntry[0] = node.currentEntry[2];
+                rightNode.childrens[0] = node.childrens[2];
+                rightNode.childrens[1] = node.childrens[3];
+
+                // 设置父节点自己点数
+                tmpNode.childrenNodeSize = 2;
+                // 把要上移的数据赋值给父结点
+                tmpNode.currentEntry[0] = node.currentEntry[order / 2];
+                tmpNode.childrenNodeSize = 2;
+                tmpNode.currentEntrySize ++;
+
+                tmpNode.childrens[0] = leftNode;
+                tmpNode.childrens[1] = rightNode;
+
+                leftNode.childrenNodeSize = 2;
+                rightNode.childrenNodeSize = 2;
+
+                return tmpNode;
+            }
+            return null;
         }
     }
 }
